@@ -210,4 +210,41 @@ typedef BlockType = int;
 // 5 - mirror N
 // 6 - T
 
+const List<BlockType> _blockTypes = [0, 1, 2, 3, 4, 5, 6];
+
+BlockType _getRandomBlockType() =>
+    _blockTypes[_getRandom(
+      0,
+      _blockTypes.length - 1,
+    )];
+
+/******Тип поворота блока*******/
+typedef BlockRotation = int;
+// 0 - zero
+// 1 - one
+// 2 - two
+// 3 - three
+
+const List<BlockRotation> _blockRotations = [0, 1, 2, 3];
+
+BlockRotation _getRandomRotation() =>
+    _blockRotations[_getRandom(
+      0,
+      _blockRotations.length - 1,
+    )];
+
+List<List<int>> getNewBlock() {
+  var blockType = _getRandomBlockType();
+  var rotation = _getRandomRotation();
+  List<List<int>> tmp = List.generate(4, (_) => List.filled(4, 0));
+  var defBlock = _defBlocks[blockType][rotation];
+  for (int i = 0; i < 4; i++) {
+  for (int j = 0; j < 4; j++) {
+  tmp[i][j] = defBlock[i][j];
+  }
+  }
+  return tmp;
+}
+
+
 
