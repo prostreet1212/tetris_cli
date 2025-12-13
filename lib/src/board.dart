@@ -46,6 +46,7 @@ void drawBoard() {
     stdout.write('\n');
   }
 }
+
 // Функция очистки заполненных строк
 void clearLine() {
   for (int j = 0; j <= heightBoard - 3; j++) {
@@ -57,7 +58,8 @@ void clearLine() {
       }
       i++;
     }
-    if (i == widthBoard - 2) { // если строка заполнена
+    if (i == widthBoard - 2) {
+      // если строка заполнена
 // очистка строки и сдвиг строк игровой доски вниз
       for (int k = j; k > 0; k--) {
         for (int idx = 1; idx <= widthBoard - 3; idx++) {
@@ -88,3 +90,109 @@ void newBlock() {
   }
 }
 
+// Функция перемещения фигуры по основной доске
+void moveBlock(int x2, int y2) {
+  // убираем фигуру с текущей позиции
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      if (x + j >= 0) {
+        mainBoard[y + i][x + j] -= mblock[i][j];
+      }
+    }
+  }
+  // устанавливаем новую позицию
+  x = x2;
+  y = y2;
+  // добавляем фигуру на новую позицию
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      if (x + j >= 0) {
+        mainBoard[y + i][x + j] += mblock[i][j];
+      }
+    }
+  }
+  drawBoard();
+}
+
+// Функция проверки возможности сдвига блока в заданном направлении
+bool isFilledBlock(int x2, int y2) {
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      if (mblock[i][j] != 0 && mainCpy[y2 + i][x2 + j] != 0) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// Функция обработки поворота блока
+void rotateBlock() {
+  // Временный блок с текущей фигурой
+  List<List<int>> tmp = List.generate(4, (_) => List.filled(4, 0));
+  // Заполняем временный блок
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      tmp[i][j] = mblock[i][j];
+    }
+  }
+  // Поворачиваем фигуру
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      mblock[i][j] = tmp[3 - j][i];
+    }
+  }
+// Проверка на то, что фигура не пересекается
+  // с границей или другими блоками ранее помещенных на доску фигур
+  if (isFilledBlock(x, y)) {
+    // если есть пересечения, то возвращаем старую фигуру
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 4; j++) {
+        mblock[i][j] = tmp[i][j];
+      }
+    }
+  }
+  // Обновляем основную доску
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      // Убираем старую фигуру
+      mainBoard[y + i][x + j] -= tmp[i][j];
+      // Добавляем новую фигуру
+      mainBoard[y + i][x + j] += mblock[i][j];
+    }
+  }
+  drawBoard();
+}
+
+void savePresentBoardToCpy() {
+  for (int i = 0; i < heightBoard - 1; i++) {
+    for (int j = 0; j < widthBoard - 1; j++) {
+      mainCpy[i][j] = mainBoard[i][j];
+    }
+  }
+}
+
+// Функция для обработки нажатия клавиш
+void controlUserInput() {
+  stdin.echoMode = false;
+  stdin.lineMode = false;
+  _subscription = stdin.listen((data) {
+    int key = data.first;
+    switch (key) {
+      case 119: // W — поворот фигуры
+        rotateBlock();
+      case 97: // A — влево
+        if (!isFilledBlock(x - 1, y)) {
+          moveBlock(x - 1, y);
+        }
+      case 115: // S — вниз
+        if (!isFilledBlock(x, y + 1)) {
+          moveBlock(x, y + 1);
+        }
+      case 100: // D — вправо
+        if (!isFilledBlock(x + 1, y)) {
+          moveBlock(x + 1, y);
+        }
+    }
+  });
+}
