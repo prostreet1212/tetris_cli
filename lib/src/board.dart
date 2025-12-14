@@ -28,23 +28,22 @@ bool get isGameOver => _isGameOver;
 // Функция отрисовки основной доски
 void drawBoard() {
   ansi.gotoxy(0, 0); // устанавливаем курсор в начало
-  for (int i = 0; i < heightBoard - 1; i++) {
+  for (int i = 0; i < heightBoard - 2; i++) {
     for (int j = 0; j < widthBoard - 1; j++) {
       switch (mainBoard[i][j]) {
         case posFree:
-          stdout.write(' '); // пустое место
+          stdout.write('⬛');
         case posFilled:
-          stdout.write('O'); // заполненное место и фигура
+          stdout.write('⬜');
         case posBoarder:
-// устанавливаем красный цвет текста
-          ansi.setTextColor(ansi.redTColor);
-          stdout.write('#'); // граница доски
-// возвращаем белый цвет
-          ansi.setTextColor(ansi.whiteTColor);
+          stdout.write('⬜');
       }
     }
     stdout.write('\n');
   }
+// отрисовываем нижнюю границу
+  stdout.write('⬜');
+  stdout.write('${'⬜' * 8}\n');
 }
 
 // Функция очистки заполненных строк
@@ -195,4 +194,66 @@ void controlUserInput() {
         }
     }
   });
+}
+
+initGame() {
+  scoreGame = 0; // обнуляем набранные очки
+  mainBoard = List.generate(
+      heightBoard,
+      (_) => List.filled(widthBoard, posFree),
+  );
+  mainCpy = List.generate(heightBoard,
+  (_) => List.filled(widthBoard, posFree),
+  );
+  mblock = List.generate(
+  4,
+  (_) => List.filled(4, posFree),
+  );
+  initDraw();
+  controlUserInput();
+}
+
+// Функция инициализации основной доски
+void initDraw() {
+// Заполняем границу игровой зоны на основной и вспомогательной доске
+  for (int i = 0; i <= heightBoard - 2; i++) {
+    for (int j = 0; j <= widthBoard - 2; j++) {
+      if (j == 0 || j == widthBoard - 2 || i == heightBoard - 2) {
+        mainBoard[i][j] = posBoarder;
+        mainCpy[i][j] = posBoarder;
+      }
+    }
+  }
+  newBlock();
+  drawBoard();
+}
+
+// Функция обработки шага игрового цикла
+void nextStep() {
+// можно сдвинуть фигуру?
+  if (!isFilledBlock(x, y + 1)) { // да
+    moveBlock(x, y + 1);
+  } else { // нет
+    clearLine();
+    savePresentBoardToCpy();
+    newBlock();
+    drawBoard();
+  }
+}
+// Функция запуска игрового цикла
+Future<void> start() async {
+  while (!isGameOver) { // пока игра не окончена
+    nextStep();
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
+// завершаем игру
+  _subscription?.cancel(); // завершаем прослушивание нажатий клавиш
+  ansi.setTextColor(ansi.yellowTColor);
+  stdout.write('===============\n'
+      '~~~Game Over~~~\n'
+      '===============\n');
+  ansi.setBackgroundColor(ansi.blueBgColor);
+  stdout.writeln('Score: $scoreGame ');
+  await Future.delayed(const Duration(seconds: 5));
+  ansi.reset();
 }
