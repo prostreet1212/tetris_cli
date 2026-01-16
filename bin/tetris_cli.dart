@@ -11,3 +11,7 @@ ansi.hideCursor();
 initGame();
 start();
 }
+
+base class Dima{
+
+}
